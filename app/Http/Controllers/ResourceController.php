@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Contracts\CreateFormRequestInterface;
+use App\Http\Requests\Contracts\PaginationFormRequestInterface;
 use App\Http\Requests\Contracts\UpdateFormRequestInterface;
+use App\Http\Requests\Core\PaginationRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,12 +13,14 @@ use Illuminate\Http\Response;
 
 abstract class ResourceController extends Controller
 {
+    protected string $paginationFormRequest = PaginationRequest::class;
     protected string $createFormRequest;
     protected string $updateFormRequest;
 
     public function __construct(Request $request)
     {
         parent::__construct($request);
+        app()->bind(PaginationFormRequestInterface::class, $this->paginationFormRequest);
         app()->bind(CreateFormRequestInterface::class, $this->createFormRequest);
         app()->bind(UpdateFormRequestInterface::class, $this->updateFormRequest);
     }

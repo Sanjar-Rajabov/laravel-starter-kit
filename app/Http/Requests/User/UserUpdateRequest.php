@@ -5,6 +5,7 @@ namespace App\Http\Requests\User;
 use App\Http\Requests\Contracts\UpdateFormRequestInterface;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UserUpdateRequest extends FormRequest implements UpdateFormRequestInterface
 {
@@ -16,7 +17,11 @@ class UserUpdateRequest extends FormRequest implements UpdateFormRequestInterfac
     public function rules(): array
     {
         return [
-            'login' => 'required|string|unique:users,login,' . User::query()->findOrFail($this->route('id'))->id,
+            'login' => [
+                'required',
+                'string',
+                Rule::unique('users', 'login')->ignore($this->route('id'))
+            ],
             'password' => 'required|string',
             'addresses' => 'required|array',
             'addresses.*.id' => 'nullable|int|exists:addresses,id',
