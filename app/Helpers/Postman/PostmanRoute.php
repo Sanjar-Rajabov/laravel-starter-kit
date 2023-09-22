@@ -86,8 +86,8 @@ class PostmanRoute
             return ucfirst($methodName);
         } else {
             return self::camelCaseToWords(
-                str_replace('Controller', '', $reflectionClass->getShortName())
-            ) . ' ' . strtolower($methodName);
+                    str_replace('Controller', '', $reflectionClass->getShortName())
+                ) . ' ' . strtolower($methodName);
         }
     }
 
