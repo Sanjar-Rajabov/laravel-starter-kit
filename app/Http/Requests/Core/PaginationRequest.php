@@ -15,8 +15,8 @@ class PaginationRequest extends FormRequest implements PaginationFormRequestInte
     public function rules(): array
     {
         return [
-            'page' => 'required|int',
-            'page-limit' => 'required|int'
+            'page' => 'nullable|int',
+            'per-page' => 'nullable|int'
         ];
     }
 }

@@ -9,7 +9,6 @@ use ReflectionException;
 
 class PostmanRoute
 {
-
     protected static array $dataTypes = ['string', 'int', 'integer', 'float', 'array', 'numeric', 'image', 'file', 'date'];
     protected static array $allowedMethods = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
 
@@ -24,38 +23,63 @@ class PostmanRoute
         $routes = collect($router->getRoutes()->getRoutes());
         $groups = $routes->where(fn($item) => in_array('api', $item->action['middleware']))->groupBy('action.prefix');
 
-        $routeGroups = [];
-        foreach ($groups as $group => $items) {
-            $routeGroups[] = (object)[
-                'name' => ucfirst(trim($group, '/\\')),
-                'controller' => explode('@', $items->first()->action['uses'])[0],
-                'routes' => $items
-            ];
-        }
+        $folders = [];
+        foreach ($groups->keys() as $key) {
+            $explode = explode('/', trim($key, '/'));
+            $count = count($explode);
 
-        $array = [];
-        foreach ($routeGroups as $group) {
-            $items = [];
+            if ($count > 1 || $explode[0] != "") {
+                $iterationFolders = [];
+                $folderKey = null;
+                for ($i = 0; $i <= $count - 1; $i++) {
+                    if ($i === $count - 1) { // if last item
+                        $items = [];
+                        foreach ($groups[$key] as $route) {
+                            $items[] = self::generateRoute($route);
+                        }
 
-            /** @var Route $route */
-            if (!empty($group->name)) {
-                foreach ($group->routes as $route) {
-                    $items[] = self::generateRoute($route);
+                        $array = [
+                            'name' => ucfirst($explode[$i]),
+                            'item' => $items
+                        ];
+                    } else {
+                        $array = [
+                            'name' => ucfirst($explode[$i]),
+                            'item' => []
+                        ];
+                    }
+
+                    if ($i === 0) {
+                        for ($f = 0; $f < count($folders); $f++) {
+                            if (!empty($folders[$f]['name']) && $folders[$f]['name'] == $array['name']) {
+                                $folderKey = $f;
+                                $iterationFolders = $folders[$f];
+                            }
+                        }
+                        if ($folderKey === null) {
+                            $iterationFolders[$i] = $array;
+                        }
+                    } else {
+                        if ($folderKey === null) {
+                            $iterationFolders[$i - 1]['item'][] = $array;
+                        } else {
+                            $iterationFolders['item'][] = $array;
+                        }
+                    }
                 }
-
-                $array[] = [
-                    'name' => $group->name,
-                    'item' => $items
-                ];
-
+                if ($folderKey === null) {
+                    $folders = array_merge($folders, $iterationFolders);
+                } else {
+                    $folders[$folderKey] = $iterationFolders;
+                }
             } else {
-                foreach ($group->routes as $route) {
-                    $array[] = self::generateRoute($route, true);
+                foreach ($groups[$key] as $route) {
+                    $folders[] = self::generateRoute($route);
                 }
             }
         }
 
-        return $array;
+        return $folders;
     }
 
     /**
@@ -152,7 +176,21 @@ class PostmanRoute
             $fields = [];
         }
 
-        return self::generateFieldsDoc($fields);
+        $doc = self::generateFieldsDoc($fields);
+
+        if ($reflectionClass->hasProperty('filterable') && !empty($reflectionClass->getProperty('filterable')->getDefaultValue())) {
+            $doc .= self::generateFiltersDoc('Filterable columns', $reflectionClass->getProperty('filterable')->getDefaultValue());
+        }
+
+        if ($reflectionClass->hasProperty('sortable') && !empty($reflectionClass->getProperty('sortable')->getDefaultValue())) {
+            $doc .= self::generateSortDocs($reflectionClass->getProperty('sortable')->getDefaultValue());
+        }
+
+        if ($reflectionClass->hasProperty('searchable') && !empty($reflectionClass->getProperty('searchable')->getDefaultValue())) {
+            $doc .= self::generateFiltersDoc('Searchable columns', $reflectionClass->getProperty('searchable')->getDefaultValue());
+        }
+
+        return $doc;
     }
 
     protected static function getDataFromRules(array $rules): array
@@ -221,6 +259,51 @@ class PostmanRoute
         return $text;
     }
 
+    protected static function generateFiltersDoc(string $title, array $filters): string
+    {
+        $text = '';
+        $i = 0;
+
+        if (count($filters) !== 0) {
+            $text .= "\n\n##### $title\n\n";
+        }
+
+        foreach ($filters as $column => $type) {
+            if ($i !== 0) {
+                $text .= "\n";
+            }
+
+            $name = strtolower($type->name);
+            $text .= " - $column - $name";
+
+            $i++;
+        }
+
+        return $text;
+    }
+
+    protected static function generateSortDocs(array $sortable): string
+    {
+        $text = '';
+        $i = 0;
+
+        if (count($sortable) !== 0) {
+            $text .= "\n\n##### Sortable columns\n\n";
+        }
+
+        foreach ($sortable as $column => $type) {
+            if ($i !== 0) {
+                $text .= "\n";
+            }
+
+            $text .= " - $column";
+
+            $i++;
+        }
+
+        return $text;
+    }
+
     protected static function camelCaseToWords(string $string): string
     {
         return trim(
@@ -230,4 +313,5 @@ class PostmanRoute
             )
         );
     }
+
 }

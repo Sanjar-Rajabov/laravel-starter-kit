@@ -96,7 +96,7 @@ class Query
         return $this;
     }
 
-    public function find(int $id, bool $exception = true): Model
+    public function find($id, bool $exception = true): Model
     {
         $this->setModel(
             $exception
@@ -116,8 +116,11 @@ class Query
 
         try {
             $this->model->fillAndSave($attributes);
-            $this->model->deleteRelations($attributes);
-            $this->model->saveRelations($attributes);
+
+            if (method_exists($this->model, 'deleteRelations')) {
+                $this->model->deleteRelations($attributes);
+                $this->model->saveRelations($attributes);
+            }
         } catch (Exception $exception) {
             DB::rollBack();
             throw $exception;
@@ -145,11 +148,16 @@ class Query
         if (!in_array($type, [FilterEnum::In, FilterEnum::Between])) {
             $value = is_array($value) ? implode('', $value) : $value;
         } else {
-            if (!is_array($value)) {
+            if (!is_array($value) || ($type == FilterEnum::Between && count($value) != 2)) {
                 return;
             }
             if ($type == FilterEnum::Between && !is_numeric($value[0])) {
-                $value = array_map(fn($date) => Carbon::make($date), $value);
+                if (Carbon::hasFormat($value[0], 'Y-m-d') && Carbon::hasFormat($value[1], 'Y-m-d')) {
+                    $value[0] = Carbon::parse($value[0])->startOfDay();
+                    $value[1] = Carbon::parse($value[1])->endOfDay();
+                } else {
+                    $value = array_map(fn($date) => Carbon::parse($date), $value);
+                }
             }
         }
         call_user_func([FilterHelper::class, $type->value], $query, $column, $value);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\FilterEnum;
+use App\Http\Controllers\Core\ResourceController;
 use App\Http\Requests\User\UserCreateRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use App\Models\User;

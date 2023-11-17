@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Core;
 
+use App\Helpers\ResponseHelper;
 use App\Http\Requests\Contracts\CreateFormRequestInterface;
 use App\Http\Requests\Contracts\PaginationFormRequestInterface;
 use App\Http\Requests\Contracts\UpdateFormRequestInterface;
@@ -9,7 +10,6 @@ use App\Http\Requests\Core\PaginationRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 abstract class ResourceController extends Controller
 {
@@ -21,56 +21,54 @@ abstract class ResourceController extends Controller
     {
         parent::__construct($request);
         app()->bind(PaginationFormRequestInterface::class, $this->paginationFormRequest);
-        app()->bind(CreateFormRequestInterface::class, $this->createFormRequest);
-        app()->bind(UpdateFormRequestInterface::class, $this->updateFormRequest);
+        if (!empty($this->createFormRequest)) {
+            app()->bind(CreateFormRequestInterface::class, $this->createFormRequest);
+        }
+        if (!empty($this->updateFormRequest)) {
+            app()->bind(UpdateFormRequestInterface::class, $this->updateFormRequest);
+        }
     }
 
     public function index(): JsonResponse
     {
         $this->query->builder()->with($this->relationsForIndex());
-        return $this->loadItems()->respondWithItems();
+        $this->loadItems();
+
+        return ResponseHelper::items($this->items, $this->itemsResource ?? null);
     }
 
-    public function show(int $id): JsonResponse
+    public function show($id): JsonResponse
     {
         $this->query->builder()->with($this->relationsForShow());
-        return $this->setModel($this->query->find($id))->respondWithModel();
+        $this->setModel($this->query->find($id));
+        return ResponseHelper::model($this->model, $this->modelResource ?? null);
     }
 
     /**
      * @throws Exception
      */
-    public function create(CreateFormRequestInterface $request): Response
+    public function create(CreateFormRequestInterface $request): JsonResponse
     {
         $this->query->setModel(new $this->modelClass);
         $this->query->save($request->safe()->all());
-        return response('', 201);
+        return ResponseHelper::created();
     }
 
     /**
      * @throws Exception
      */
-    public function update(UpdateFormRequestInterface $request, int $id): Response
+    public function update(UpdateFormRequestInterface $request, int $id): JsonResponse
     {
         $this->query->find($id);
         $this->query->save($request->safe()->all());
-        return response('', 200);
+        return ResponseHelper::updated();
     }
 
-    public function delete(int $id): Response
+    public function delete(int $id): JsonResponse
     {
         $this->query->find($id);
         $this->query->delete();
-        return response('', 204);
-    }
-
-    private function loadRelations(string $method)
-    {
-        $relations = call_user_func([$this, $method]);
-
-        if (!empty($relations)) {
-            $this->query->builder()->with($relations);
-        }
+        return ResponseHelper::deleted();
     }
 
     protected function relationsForIndex(): array

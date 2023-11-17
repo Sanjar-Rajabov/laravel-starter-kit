@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Core;
 
 use App\Queries\Query;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
