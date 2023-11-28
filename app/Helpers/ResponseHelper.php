@@ -39,7 +39,21 @@ class ResponseHelper
             $data = $items;
         }
 
-        return self::response($data, HttpCode::OK);
+        if ($items instanceof LengthAwarePaginator) {
+            return self::response([
+                'pagination' => [
+                    'current' => $items->currentPage(),
+                    'previous' => $items->currentPage() > 1 ? $items->currentPage() - 1 : 0,
+                    'next' => $items->hasMorePages() ? $items->currentPage() + 1 : 0,
+                    'perPage' => $items->perPage(),
+                    'totalPage' => $items->lastPage(),
+                    'totalItem' => $items->total(),
+                ],
+                'list' => $items->items()
+            ], HttpCode::OK);
+        } else {
+            return self::response($data, HttpCode::OK);
+        }
     }
 
     public static function created(): JsonResponse
