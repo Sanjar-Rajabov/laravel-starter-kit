@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum FilterEnum: string
+enum FilterTypes: string
 {
     case Equal = 'whereEqual';
     case Like = 'whereLike';

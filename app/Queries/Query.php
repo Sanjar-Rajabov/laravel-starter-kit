@@ -2,9 +2,11 @@
 
 namespace App\Queries;
 
-use App\Enums\FilterEnum;
-use App\Enums\SortEnum;
+use App\Enums\FilterTypes;
+use App\Enums\SortTypes;
 use App\Helpers\FilterHelper;
+use App\Helpers\SearchHelper;
+use App\Models\Interfaces\HasRelationsInterface;
 use App\Traits\Language;
 use Carbon\Carbon;
 use Exception;
@@ -74,7 +76,7 @@ class Query
             return $this;
         }
 
-        if ($type === SortEnum::Localized) {
+        if ($type === SortTypes::Localized) {
             $column = "$column->{$this->lang()}";
         }
 
@@ -117,7 +119,7 @@ class Query
         try {
             $this->model->fillAndSave($attributes);
 
-            if (method_exists($this->model, 'deleteRelations')) {
+            if ($this->model instanceof HasRelationsInterface) {
                 $this->model->deleteRelations($attributes);
                 $this->model->saveRelations($attributes);
             }
@@ -145,13 +147,13 @@ class Query
 
     protected function applyFilters($query, $type, $column, $value): void
     {
-        if (!in_array($type, [FilterEnum::In, FilterEnum::Between])) {
+        if (!in_array($type, [FilterTypes::In, FilterTypes::Between])) {
             $value = is_array($value) ? implode('', $value) : $value;
         } else {
-            if (!is_array($value) || ($type == FilterEnum::Between && count($value) != 2)) {
+            if (!is_array($value) || ($type == FilterTypes::Between && count($value) != 2)) {
                 return;
             }
-            if ($type == FilterEnum::Between && !is_numeric($value[0])) {
+            if ($type == FilterTypes::Between && !is_numeric($value[0])) {
                 if (Carbon::hasFormat($value[0], 'Y-m-d') && Carbon::hasFormat($value[1], 'Y-m-d')) {
                     $value[0] = Carbon::parse($value[0])->startOfDay();
                     $value[1] = Carbon::parse($value[1])->endOfDay();
@@ -169,12 +171,12 @@ class Query
             $items = explode('.', $column);
 
             if (count($items) == 1) {
-                call_user_func([FilterHelper::class, $type->value], $query, $column, $value);
+                call_user_func([SearchHelper::class, $type->value], $query, $column, $value);
             } else {
                 $query->orWhereHas(
                     $items[0],
                     fn(Builder $query) => $query->where(
-                        fn($query) => call_user_func([FilterHelper::class, $type->value], $query, array_pop($items), $value),
+                        fn($query) => call_user_func([SearchHelper::class, $type->value], $query, array_pop($items), $value),
                     )
                 );
             }

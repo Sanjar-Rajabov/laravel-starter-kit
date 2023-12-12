@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helpers\Postman;
+namespace App\Postman;
 
 class PostmanVariable
 {

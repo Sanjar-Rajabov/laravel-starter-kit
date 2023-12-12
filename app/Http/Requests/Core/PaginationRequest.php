@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Core;
 
-use App\Http\Requests\Contracts\PaginationFormRequestInterface;
+use App\Http\Requests\Core\Interfaces\GetAllRequestInterface;
 use Illuminate\Foundation\Http\FormRequest;
 
-class PaginationRequest extends FormRequest implements PaginationFormRequestInterface
+class PaginationRequest extends FormRequest implements GetAllRequestInterface
 {
     public function authorize(): true
     {
@@ -16,7 +16,7 @@ class PaginationRequest extends FormRequest implements PaginationFormRequestInte
     {
         return [
             'page' => 'nullable|int',
-            'per-page' => 'nullable|int'
+            'limit' => 'nullable|int'
         ];
     }
 }

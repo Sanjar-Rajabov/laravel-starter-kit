@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Route;
 class RouteHelper
 {
     private static array $methods = [
-        'index' => [
+        'getAll' => [
             'method' => 'get',
             'url' => ''
         ],
-        'show' => [
+        'getOne' => [
             'method' => 'get',
             'url' => '{id}'
         ],
@@ -29,12 +29,16 @@ class RouteHelper
         ]
     ];
 
-    public static function resource(string $prefix, string $controller, array $except = []): void
+    public static function resource(string $prefix, string $controller, array $only = []): void
     {
         $methods = self::$methods;
 
-        if (isset($options['except'])) {
-            $methods = array_diff($methods, (array) $options['except']);
+        if (!empty($only)) {
+            foreach ($methods as $key => $method) {
+                if (!in_array($key, $only)) {
+                    unset($methods[$key]);
+                }
+            }
         }
 
         Route::prefix($prefix)->controller($controller)->group(function () use ($controller, $methods) {

@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use App\Enums\RelationEnum;
+use App\Enums\RelationTypes;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -32,15 +32,15 @@ trait HasRelation
         $relations = $this->getFillableRelations();
         foreach (Arr::only($attributes, array_keys($relations)) as $relation => $value) {
             switch ($relations[$relation]) {
-                case RelationEnum::OneToOne:
+                case RelationTypes::OneToOne:
                     $this->saveRelation($relation, $value);
                     break;
-                case RelationEnum::OneToMany:
+                case RelationTypes::OneToMany:
                     foreach ($value as $item) {
                         $this->saveRelation($relation, $item);
                     }
                     break;
-                case RelationEnum::ManyToMany:
+                case RelationTypes::ManyToMany:
                     $this->model->{$relation}()->sync($value);
                     break;
             }
@@ -52,15 +52,15 @@ trait HasRelation
         $relations = $this->getFillableRelations();
         foreach (Arr::only($attributes, array_keys($relations)) as $relation => $value) {
             switch ($relations[$relation]) {
-                case RelationEnum::OneToOne:
+                case RelationTypes::OneToOne:
                     if (empty($value['id'])) {
                         $this->{$relation}()->delete();
                     }
                     break;
-                case RelationEnum::OneToMany:
+                case RelationTypes::OneToMany:
                     $this->{$relation}()->whereNotIn('id', collect($value)->whereNotNull('id')->pluck('id'))->delete();
                     break;
-                case RelationEnum::ManyToMany:
+                case RelationTypes::ManyToMany:
                     $this->{$relation}()->whereNotIn('id', collect($value)->whereNotNull('id')->pluck('id'))->detach();
             }
         }

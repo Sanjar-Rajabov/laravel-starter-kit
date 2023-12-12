@@ -10,7 +10,7 @@ trait Language
     protected function lang(): string
     {
         $lang = request()->header('Accept-Language', 'ru');
-        return in_array($lang, ['uz', 'ru']) ? $lang : 'ru';
+        return in_array($lang, ['uz', 'ru', 'en']) ? $lang : 'ru';
     }
 
     public function translate(string $column): ?string

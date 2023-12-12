@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum SortEnum
+enum SortTypes
 {
     case Simple;
     case Localized;

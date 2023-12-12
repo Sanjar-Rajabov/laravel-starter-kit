@@ -20,6 +20,15 @@ class ResponseHelper
         ], $status->value);
     }
 
+    public static function error(string $message, HttpCode $status = HttpCode::BAD_REQUEST): JsonResponse
+    {
+        return response()->json([
+            'statusCode' => $status->value,
+            'statusDescription' => HttpStatus::status($status),
+            'message' => $message
+        ], $status->value);
+    }
+
     public static function model(Model $model, string $resource = null): JsonResponse
     {
         if (!empty($resource)) {
@@ -28,7 +37,7 @@ class ResponseHelper
             $data = $model;
         }
 
-        return self::response($data, HttpCode::OK);
+        return self::response($data);
     }
 
     public static function items(Collection|LengthAwarePaginator $items, string $resource = null): JsonResponse
@@ -50,9 +59,9 @@ class ResponseHelper
                     'totalItem' => $items->total(),
                 ],
                 'list' => $items->items()
-            ], HttpCode::OK);
+            ]);
         } else {
-            return self::response($data, HttpCode::OK);
+            return self::response($data);
         }
     }
 
@@ -63,7 +72,7 @@ class ResponseHelper
 
     public static function updated(): JsonResponse
     {
-        return self::response(null, HttpCode::OK);
+        return self::response(null);
     }
 
     public static function accepted(): JsonResponse

@@ -40,8 +40,9 @@ final class FilterHelper
     public static function whereLocalized(Builder $query, $column, $value): Builder
     {
         return $query->where(
-            fn(Builder $query) => $query->where(DB::raw("lower({$column}->ru)"), 'LIKE', '%' . mb_strtolower($value) . '%')
-                ->orWhere(DB::raw("lower({$column}->uz)"), 'LIKE', '%' . mb_strtolower($value) . '%')
+            fn(Builder $query) => $query->where(DB::raw("lower({$column}->>'ru')"), 'LIKE', '%' . mb_strtolower($value) . '%')
+                ->orWhere(DB::raw("lower({$column}->>'uz')"), 'LIKE', '%' . mb_strtolower($value) . '%')
+                ->orWhere(DB::raw("lower({$column}->>'en')"), 'LIKE', '%' . mb_strtolower($value) . '%')
         );
     }
 }

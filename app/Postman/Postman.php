@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Helpers\Postman;
+namespace App\Postman;
 
 use ReflectionException;
 
 class Postman
 {
+
+    public static string $baseUrlVariable = '{{baseUrl}}';
 
     /**
      * @throws ReflectionException

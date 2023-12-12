@@ -30,7 +30,12 @@ trait SafelySave
 
     public function fillAndSave(array $attributes, array $options = []): bool
     {
-        $this->fill(Arr::only($attributes, $this->getFillable()));
+        if ($this->getGuarded() != ['*']) {
+            $this->fill(Arr::except($attributes, $this->getGuarded()));
+        } else {
+            $this->fill(Arr::only($attributes, $this->getFillable()));
+        }
+
         return self::save($options);
     }
 }

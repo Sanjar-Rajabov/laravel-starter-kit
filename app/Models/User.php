@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use App\Enums\RelationEnum;
+use App\Models\Interfaces\HasRelationsInterface;
+use App\Models\Interfaces\SafelySaveInterface;
+use App\Traits\DateSerializer;
 use App\Traits\HasRelation;
 use App\Traits\SafelySave;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
@@ -14,17 +18,14 @@ use Illuminate\Support\Facades\Hash;
  * @property int $id
  * @property string $login
  */
-class User extends Authenticatable
+class User extends Authenticatable implements SafelySaveInterface, HasRelationsInterface
 {
-    use SafelySave, HasRelation;
+    use SafelySave, HasRelation, HasFactory, DateSerializer;
 
-    protected $fillable = [
-        'login' => 'string',
-        'password' => 'string'
-    ];
+    protected $guarded = ['id'];
 
     protected $hidden = [
-        'password', 'created_at', 'updated_at'
+        'password'
     ];
 
     public function getFillableRelations(): array
