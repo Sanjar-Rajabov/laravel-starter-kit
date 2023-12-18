@@ -4,14 +4,17 @@ namespace App\Http\Requests\User;
 
 use App\Helpers\PostmanHelper;
 use App\Http\Requests\Core\Interfaces\GetAllRequestInterface;
+use App\Http\Requests\Core\Interfaces\HasParamsExampleInterface;
+use App\Http\Requests\Core\Interfaces\Postman;
 use App\Http\Requests\Core\Interfaces\PostmanRequestInterface;
 use App\Models\User;
+use App\Postman\PostmanParams;
 use App\Postman\PostmanRequestBody;
 use App\Postman\PostmanResponse;
 use App\Postman\PostmanResponseExample;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserGetAllRequest extends FormRequest implements GetAllRequestInterface, PostmanRequestInterface
+class UserGetAllRequest extends FormRequest implements GetAllRequestInterface, PostmanRequestInterface, HasParamsExampleInterface
 {
     public function authorize(): bool
     {
@@ -24,6 +27,18 @@ class UserGetAllRequest extends FormRequest implements GetAllRequestInterface, P
             'page' => 'nullable|int',
             'limit' => 'nullable|int'
         ];
+    }
+
+    public function getParams(): PostmanParams
+    {
+        return new PostmanParams([
+            'filters[id]' => 1,
+            'filters[login]' => 'name',
+            'filters[created_at][0]' => '2023-12-17',
+            'filters[created_at][1]' => '2023-12-19',
+            'page' => 1,
+            'limit' => 10
+        ]);
     }
 
     public function getBody(): PostmanRequestBody

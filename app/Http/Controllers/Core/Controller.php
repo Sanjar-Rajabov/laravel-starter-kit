@@ -20,7 +20,7 @@ abstract class Controller extends BaseController
 
     protected Request $request;
 
-    protected bool $withQuery = true;
+    protected bool $withQuery = false;
 
     /** @var class-string<Model> */
     protected string $modelClass;

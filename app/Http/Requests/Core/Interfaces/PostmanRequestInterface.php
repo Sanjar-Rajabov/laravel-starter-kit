@@ -5,7 +5,7 @@ namespace App\Http\Requests\Core\Interfaces;
 use App\Postman\PostmanRequestBody;
 use App\Postman\PostmanResponse;
 
-interface PostmanRequestInterface
+interface PostmanRequestInterface extends HasBodyExampleInterface, HasResponseExampleInterface
 {
     public function getBody(): PostmanRequestBody;
 

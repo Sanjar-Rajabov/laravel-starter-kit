@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 
 abstract class ResourceController extends Controller
 {
+    protected bool $withQuery = true;
     protected string $getAllRequest = PaginationRequest::class;
     protected string $getOneRequest = GetByIdRequest::class;
     protected string $createRequest;

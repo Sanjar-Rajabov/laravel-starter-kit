@@ -6,7 +6,7 @@ use App\Http\Requests\Core\Interfaces\CreateRequestInterface;
 use App\Http\Requests\Core\Interfaces\DeleteRequestInterface;
 use App\Http\Requests\Core\Interfaces\GetAllRequestInterface;
 use App\Http\Requests\Core\Interfaces\GetOneRequestInterface;
-use App\Http\Requests\Core\Interfaces\PostmanRequestInterface;
+use App\Http\Requests\Core\Interfaces\HasResponseExampleInterface;
 use App\Http\Requests\Core\Interfaces\UpdateRequestInterface;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
@@ -105,7 +105,7 @@ class PostmanRoute
         return [
             'name' => self::getName($addControllerToName, self::camelCaseToWords($action[1]), $reflectionClass),
             'request' => $request,
-            'response' => $requestClass instanceof PostmanRequestInterface ? $requestClass->getResponse($request)->toArray() : []
+            'response' => $requestClass instanceof HasResponseExampleInterface ? $requestClass->getResponse($request)->toArray() : []
         ];
     }
 

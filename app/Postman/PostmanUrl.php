@@ -5,7 +5,8 @@ namespace App\Postman;
 class PostmanUrl
 {
     public function __construct(
-        protected string $uri
+        protected string $uri,
+        protected array  $params = []
     )
     {
     }
@@ -38,6 +39,7 @@ class PostmanUrl
             'raw' => Postman::$baseUrlVariable . '/' . $uri,
             'host' => [Postman::$baseUrlVariable],
             'path' => $paths,
+            'query' => $this->params,
             'variable' => $variables
         ];
     }
