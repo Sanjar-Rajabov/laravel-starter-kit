@@ -18,6 +18,8 @@ class PostmanRoute
     public static array $dataTypes = ['string', 'int', 'integer', 'float', 'array', 'numeric', 'image', 'file', 'date', 'bool', 'boolean'];
     public static array $allowedMethods = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
 
+    protected static array $folders = [];
+
     /**
      * @throws ReflectionException
      */
@@ -29,63 +31,105 @@ class PostmanRoute
         $routes = collect($router->getRoutes()->getRoutes());
         $groups = $routes->where(fn($item) => in_array('api', $item->action['middleware']))->groupBy('action.prefix');
 
+        $temp = self::$folders = [];
+
+        foreach ($groups as $key => $group)
+            self::generateItems($temp, $key);
+
+        foreach ($temp as $folder)
+            self::generateItemsFix(self::$folders, $folder);
+
         $folders = [];
-        foreach ($groups->keys() as $key) {
-            $explode = explode('/', trim($key, '/'));
-            $count = count($explode);
 
-            if ($count > 1 || $explode[0] != "") {
-                $iterationFolders = [];
-                $folderKey = null;
-                for ($i = 0; $i <= $count - 1; $i++) {
-                    if ($i === $count - 1) { // if last item
-                        $items = [];
-                        foreach ($groups[$key] as $route) {
-                            $items[] = self::generateRoute($route);
-                        }
+        foreach (self::$folders as $folder) {
+            self::setRoute($folder, $groups);
+            $folders[] = $folder;
+        }
 
-                        $array = [
-                            'name' => ucfirst($explode[$i]),
-                            'item' => $items
-                        ];
-                    } else {
-                        $array = [
-                            'name' => ucfirst($explode[$i]),
-                            'item' => []
-                        ];
-                    }
-
-                    if ($i === 0) {
-                        for ($f = 0; $f < count($folders); $f++) {
-                            if (!empty($folders[$f]['name']) && $folders[$f]['name'] == $array['name']) {
-                                $folderKey = $f;
-                                $iterationFolders = $folders[$f];
-                            }
-                        }
-                        if ($folderKey === null) {
-                            $iterationFolders[$i] = $array;
-                        }
-                    } else {
-                        if ($folderKey === null) {
-                            $iterationFolders[$i - 1]['item'][] = $array;
-                        } else {
-                            $iterationFolders['item'][] = $array;
-                        }
-                    }
-                }
-                if ($folderKey === null) {
-                    $folders = array_merge($folders, $iterationFolders);
-                } else {
-                    $folders[$folderKey] = $iterationFolders;
-                }
-            } else {
-                foreach ($groups[$key] as $route) {
-                    $folders[] = self::generateRoute($route);
-                }
+        if (in_array('', $groups->keys()->toArray())) {
+            foreach ($groups[''] as $route) {
+                $folders[] = self::generateRoute($route);
             }
         }
 
         return $folders;
+    }
+
+
+    /**
+     * @throws ReflectionException
+     */
+    protected static function setRoute(array &$folder, $groups, string $prefix = null): void
+    {
+        if (empty($prefix)) {
+            $prefix = lcfirst($folder['name']);
+        }
+
+        if (!empty($folder['item']) && empty($folder['request'])) {
+            $items = [];
+            foreach ($folder['item'] as $item) {
+                $itemPrefix = $prefix . '/' . lcfirst($item['name']);
+                if (!empty($groups[$itemPrefix])) {
+                    foreach ($groups[$itemPrefix] as $route) {
+                        $item['item'][] = self::generateRoute($route);
+                    }
+                }
+
+                $items[] = $item;
+            }
+
+            $folder['item'] = $items;
+        } elseif ($folder['item'] === []) {
+            foreach ($groups[$prefix] as $route) {
+                $folder['item'][] = self::generateRoute($route);
+            }
+        }
+
+        if (!empty($groups[$prefix])) {
+            foreach ($groups[$prefix] as $route) {
+                $folder['item'][] = self::generateRoute($route);
+            }
+        }
+    }
+
+    private static function generateItemsFix(array &$folders, array $folder): void
+    {
+        $newFolder = $folder;
+        $newItems = [];
+
+        foreach ($newFolder['item'] as $fol)
+            self::generateItemsFix($newItems, $fol);
+
+        $newFolder['item'] = $newItems;
+        $folders[] = $newFolder;
+    }
+
+    protected static function generateItems(array &$array, string $item): void
+    {
+        $levels = explode('/', $item);
+
+        if ($levels[0] === "") {
+            return;
+        }
+
+        $newArray = [
+            'name' => ucfirst($levels[0]),
+            'item' => []
+        ];
+
+        if (count($levels) > 1) {
+            $newString = str_replace($levels[0] . '/', '', $item);
+            self::generateItems($newArray['item'], $newString);
+        }
+
+        if (array_key_exists($newArray['name'], $array)) {
+
+            $array[$newArray['name']]['item'] = [
+                ...$array[$newArray['name']]['item'],
+                ...$newArray['item']
+            ];
+
+        } else $array[$newArray['name']] = $newArray;
     }
 
     /**

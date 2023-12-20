@@ -5,7 +5,6 @@ namespace App\Http\Requests\User;
 use App\Helpers\PostmanHelper;
 use App\Http\Requests\Core\Interfaces\GetAllRequestInterface;
 use App\Http\Requests\Core\Interfaces\HasParamsExampleInterface;
-use App\Http\Requests\Core\Interfaces\Postman;
 use App\Http\Requests\Core\Interfaces\PostmanRequestInterface;
 use App\Models\User;
 use App\Postman\PostmanParams;
@@ -34,8 +33,8 @@ class UserGetAllRequest extends FormRequest implements GetAllRequestInterface, P
         return new PostmanParams([
             'filters[id]' => 1,
             'filters[login]' => 'name',
-            'filters[created_at][0]' => '2023-12-17',
-            'filters[created_at][1]' => '2023-12-19',
+            'filters[created_at][0]' => today()->subDays(2)->toDateString(),
+            'filters[created_at][1]' => today()->addDay()->toDateString(),
             'page' => 1,
             'limit' => 10
         ]);
